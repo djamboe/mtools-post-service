@@ -2,13 +2,17 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/djamboe/mtools-post-service/models"
+	v1 "github.com/djamboe/mtools-post-service/pkg/api/v1"
+	"github.com/streadway/amqp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log"
 	"time"
-
-	v1 "github.com/djamboe/mtools-post-service/pkg/api/v1"
+	//v1 "github.com/djamboe/mtools-post-service/pkg/api/v1"
 )
 
 const (
@@ -16,8 +20,43 @@ const (
 	apiVersion = "v1"
 )
 
+var (
+	amqpURI = flag.String("amqp", "amqp://guest:guest@localhost:5672/", "AMQP URI")
+)
+
 // toDoServiceServer is implementation of v1.ToDoServiceServer proto interface
 type postServiceServer struct {
+}
+
+var conn *amqp.Connection
+var ch *amqp.Channel
+
+func initAmqp() {
+	var err error
+
+	conn, err = amqp.Dial(*amqpURI)
+	failOnError(err, "Failed to connect to RabbitMQ")
+
+	ch, err = conn.Channel()
+	failOnError(err, "Failed to open a channel")
+
+	err = ch.ExchangeDeclare(
+		"post-data-exchange", // name
+		"direct",             // type
+		true,                 // durable
+		false,                // auto-deleted
+		false,                // internal
+		false,                // noWait
+		nil,                  // arguments
+	)
+	failOnError(err, "Failed to declare the Exchange")
+}
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+		panic(fmt.Sprintf("%s: %s", msg, err))
+	}
 }
 
 func NewPostServiceServer() v1.PostServiceServer {
@@ -41,6 +80,8 @@ func (s *postServiceServer) checkAPI(api string) error {
 
 // Create new todo task
 func (s *postServiceServer) CreatePost(ctx context.Context, req *v1.CreatePostRequest) (*v1.CreatePostResponse, error) {
+	flag.Parse()
+	initAmqp()
 	var postParam models.PostModelParam
 	// check if the API version requested by client is supported by server
 	message := "Successfully create new post !"
@@ -49,7 +90,7 @@ func (s *postServiceServer) CreatePost(ctx context.Context, req *v1.CreatePostRe
 		message = "Unsupported api version !"
 		errorStatus = true
 	}
-	postController := ServiceContainer().InjectPostController()
+
 	photo := make([]models.Photo, len(req.Photo))
 	for i, value := range req.Photo {
 		photo[i].Id = value.Id
@@ -70,14 +111,25 @@ func (s *postServiceServer) CreatePost(ctx context.Context, req *v1.CreatePostRe
 	postParam.CreatedOn = time.Now()
 	postParam.UpdatedOn = time.Now()
 	postParam.Photo = photo
-	response, err := postController.CreatePostProcess(postParam)
+	payload, err := json.Marshal(postParam)
+	failOnError(err, "Failed to marshal JSON")
+	//try to publish message into broker
+	err = ch.Publish(
+		"go-test-exchange", // exchange
+		"go-test-key",      // routing key
+		false,              // mandatory
+		false,              // immediate
+		amqp.Publishing{
+			DeliveryMode: amqp.Transient,
+			ContentType:  "application/json",
+			Body:         payload,
+			Timestamp:    time.Now(),
+		})
 
 	if err != nil {
 		fmt.Println(err)
 	}
-	if response == 0 {
-		message = "Failed insert new post"
-	}
+
 	return &v1.CreatePostResponse{
 		Api:     apiVersion,
 		Message: message,
