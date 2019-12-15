@@ -1,7 +1,7 @@
 package interfaces
 
-import "github.com/djamboe/mtools-login-service/models"
+import "github.com/djamboe/mtools-post-service/models"
 
-type ILoginService interface {
-	DoLogin(username string, password string) (models.UserModel, error)
+type IPostService interface {
+	CreatePostProcess(postParamModel models.PostModelParam) (interface{}, error)
 }

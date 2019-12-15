@@ -1,18 +1,18 @@
 package controllers
 
 import (
-	"github.com/djamboe/mtools-login-service/interfaces"
-	"github.com/djamboe/mtools-login-service/models"
+	"github.com/djamboe/mtools-post-service/interfaces"
+	"github.com/djamboe/mtools-post-service/models"
 )
 
-type LoginController struct {
-	interfaces.ILoginService
+type PostController struct {
+	interfaces.IPostService
 }
 
-func (controller *LoginController) LoginProcess(username string, password string) (models.UserModel, error) {
-	login, err := controller.DoLogin(username, password)
+func (controller *PostController) createPost(param models.PostModelParam) (interface{}, error) {
+	createPost, err := controller.CreatePostProcess(param)
 	if err != nil {
 		panic(err)
 	}
-	return login, nil
+	return createPost, nil
 }

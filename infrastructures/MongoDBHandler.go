@@ -2,7 +2,8 @@ package infrastructures
 
 import (
 	"context"
-	"github.com/djamboe/mtools-login-service/interfaces"
+	"fmt"
+	"github.com/djamboe/mtools-post-service/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -17,6 +18,15 @@ func (handler *MongoDBHandler) FindOne(filter bson.M, collectionName string, dbN
 	row := new(MongoRow)
 	row.Rows = rows
 	return row, nil
+}
+
+func (handler *MongoDBHandler) InsertOne(data interface{}, collectionName string, dbName string) (interface{}, error) {
+	collection := handler.Conn.Database(dbName).Collection(collectionName)
+	insertResult, err := collection.InsertOne(context.TODO(), data)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return insertResult, nil
 }
 
 type MongoRow struct {

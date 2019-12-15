@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/djamboe/mtools-login-service/pkg/cmd"
+	"github.com/djamboe/mtools-post-service/pkg/cmd"
 )
 
 func main() {

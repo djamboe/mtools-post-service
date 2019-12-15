@@ -2,30 +2,23 @@ package v1
 
 import (
 	"context"
-	"github.com/djamboe/mtools-login-service/controllers"
-	"github.com/djamboe/mtools-login-service/infrastructures"
-	"github.com/djamboe/mtools-login-service/repositories"
-	"github.com/djamboe/mtools-login-service/services"
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/djamboe/mtools-post-service/controllers"
+	"github.com/djamboe/mtools-post-service/infrastructures"
+	"github.com/djamboe/mtools-post-service/repositories"
+	"github.com/djamboe/mtools-post-service/services"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"sync"
 )
 
-type User struct {
-	ID       int32  `json:"id"`
-	Username string `json:"userName"`
-}
-
 type IserviceContainer interface {
-	InjectLoginController() controllers.LoginController
+	InjectPostController() controllers.PostController
 }
 
 type kernel struct{}
 
-func (k *kernel) InjectLoginController() controllers.LoginController {
+func (k *kernel) InjectPostController() controllers.PostController {
 	//mysqlConn, _ := sql.Open("mysql", "root:@tcp(localhost:3306)/marketing-tools?charset=utf8")
 	//mysqlHandler := &infrastructures.DBHandler{}
 	//mysqlHandler.Conn = mysqlConn
@@ -35,20 +28,16 @@ func (k *kernel) InjectLoginController() controllers.LoginController {
 
 	//test mongodb
 	c := GetClient()
-	mongoCon := c.Ping(context.Background(), readpref.Primary())
-	if mongoCon != nil {
-		log.Fatal("Couldn't connect to the database", mongoCon)
-	}
 
 	mongoDBConn := c
 	mongoDBHandler := &infrastructures.MongoDBHandler{}
 	mongoDBHandler.Conn = mongoDBConn
-	loginRepository := &repositories.LoginRepository{mongoDBHandler}
-	loginService := &services.LoginService{&repositories.LoginRepositoryWithCircuitBreaker{loginRepository}}
-	loginController := controllers.LoginController{loginService}
+	postRepository := &repositories.PostRepository{mongoDBHandler}
+	postService := &services.PostService{&repositories.PostRepositoryWithCircuitBreaker{postRepository}}
+	postController := controllers.PostController{postService}
 	//test mongodb
 
-	return loginController
+	return postController
 }
 
 var (
@@ -76,12 +65,4 @@ func GetClient() *mongo.Client {
 		log.Fatal(err)
 	}
 	return client
-}
-
-func ReturnOneUser(client *mongo.Client, filter bson.M) User {
-	var user User
-	collection := client.Database("maroon_martools").Collection("users")
-	documentReturned := collection.FindOne(context.TODO(), filter)
-	documentReturned.Decode(&user)
-	return user
 }

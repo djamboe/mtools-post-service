@@ -2,22 +2,21 @@ package repositories
 
 import (
 	"github.com/afex/hystrix-go/hystrix"
-	"github.com/djamboe/mtools-login-service/interfaces"
-	"github.com/djamboe/mtools-login-service/models"
+	"github.com/djamboe/mtools-post-service/interfaces"
+	"github.com/djamboe/mtools-post-service/models"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
-type LoginRepositoryWithCircuitBreaker struct {
-	LoginRepository interfaces.ILoginRepository
+type PostRepositoryWithCircuitBreaker struct {
+	PostRepository interfaces.IPostRepository
 }
 
-func (repository *LoginRepositoryWithCircuitBreaker) GetUserByEmailAndPassword(username string, password string) (models.UserModel, error) {
-	output := make(chan models.UserModel, 1)
-	hystrix.ConfigureCommand("get_user_by_username_and_password", hystrix.CommandConfig{Timeout: 1000})
-	errors := hystrix.Go("get_user_by_username_and_password", func() error {
-		user, _ := repository.LoginRepository.GetUserByEmailAndPassword(username, password)
-		output <- user
+func (repository *PostRepositoryWithCircuitBreaker) CreatePost(param models.PostModelParam) (interface{}, error) {
+	output := make(chan interface{}, 1)
+	hystrix.ConfigureCommand("create_post", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("create_post", func() error {
+		postData, _ := repository.PostRepository.CreatePost(param)
+		output <- postData
 		return nil
 	}, nil)
 
@@ -26,28 +25,25 @@ func (repository *LoginRepositoryWithCircuitBreaker) GetUserByEmailAndPassword(u
 		return out, nil
 	case err := <-errors:
 		println(err)
-		return models.UserModel{}, err
+		return 0, err
 	}
 }
 
-type LoginRepository struct {
+type PostRepository struct {
 	//interfaces.IDbHandler
 	interfaces.IMongoDBHandler
 }
 
-func (repository *LoginRepository) GetUserByEmailAndPassword(username string, password string) (models.UserModel, error) {
-	filter := bson.M{"userName": username, "password": password}
-	row, err := repository.FindOne(filter, "users", "maroon_martools")
+func (repository *PostRepository) CreatePost(param models.PostModelParam) (interface{}, error) {
+	row, err := repository.InsertOne(param, "post", "maroon_martools")
 
 	if err != nil {
 		panic(err)
 	}
 
 	if row == nil {
-		return models.UserModel{}, nil
+		return 0, nil
 	}
 
-	var user models.UserModel
-	row.DecodeResults(&user)
-	return user, nil
+	return row, nil
 }

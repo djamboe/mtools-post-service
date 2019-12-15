@@ -4,13 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/djamboe/mtools-login-service/pkg/protocol/rest"
+	"github.com/djamboe/mtools-post-service/pkg/protocol/rest"
 
 	// mysql driver
 	_ "github.com/go-sql-driver/mysql"
 
-	"github.com/djamboe/mtools-login-service/pkg/protocol/grpc"
-	"github.com/djamboe/mtools-login-service/pkg/service/v1"
+	"github.com/djamboe/mtools-post-service/pkg/protocol/grpc"
+	"github.com/djamboe/mtools-post-service/pkg/service/v1"
 )
 
 // Config is configuration for Server
@@ -42,7 +42,7 @@ func RunServer() error {
 		return fmt.Errorf("invalid TCP port for HTTP gateway: '%s'", cfg.HTTPPort)
 	}
 
-	v1API := v1.NewLoginServiceServer()
+	v1API := v1.NewPostServiceServer()
 
 	// run HTTP gateway
 	go func() {

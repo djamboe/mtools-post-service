@@ -3,7 +3,7 @@ package infrastructures
 import (
 	"database/sql"
 	"fmt"
-	"github.com/djamboe/mtools-login-service/interfaces"
+	"github.com/djamboe/mtools-post-service/interfaces"
 )
 
 type DBHandler struct {

@@ -9,11 +9,11 @@ import (
 
 	"google.golang.org/grpc"
 
-	v1 "github.com/djamboe/mtools-login-service/pkg/api/v1"
+	v1 "github.com/djamboe/mtools-post-service/pkg/api/v1"
 )
 
 // RunServer runs gRPC service to publish ToDo service
-func RunServer(ctx context.Context, v1API v1.LoginServiceServer, port string) error {
+func RunServer(ctx context.Context, v1API v1.PostServiceServer, port string) error {
 	listen, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err
@@ -21,7 +21,7 @@ func RunServer(ctx context.Context, v1API v1.LoginServiceServer, port string) er
 
 	// register service
 	server := grpc.NewServer()
-	v1.RegisterLoginServiceServer(server, v1API)
+	v1.RegisterPostServiceServer(server, v1API)
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)

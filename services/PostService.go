@@ -1,17 +1,16 @@
 package services
 
 import (
-	"github.com/djamboe/mtools-login-service/interfaces"
-	"github.com/djamboe/mtools-login-service/models"
+	"github.com/djamboe/mtools-post-service/interfaces"
+	"github.com/djamboe/mtools-post-service/models"
 )
 
-type LoginService struct {
-	interfaces.ILoginRepository
+type PostService struct {
+	interfaces.IPostRepository
 }
 
-func (service *LoginService) DoLogin(username string, password string) (models.UserModel, error) {
-	var user models.UserModel
-	user, err := service.GetUserByEmailAndPassword(username, password)
+func (service *PostService) CreatePostProcess(postParam models.PostModelParam) (interface{}, error) {
+	user, err := service.CreatePost(postParam)
 	if err != nil {
 		panic(err)
 	}

@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+message Post{
+    int64 id = 1;
+    int64 customerId = 2;
+    string customerName = 3;
+    int64 userId = 4;
+    string chanel =5;
+    string description = 6;
+    string product = 7;
+    string phone = 8;
+    string pic = 9;
+    double price = 10;
+    string notes = 11;
+    repeated Photo photo = 12;
+    int32 status = 13;
+    google.protobuf.Timestamp createdOn = 14;
+    google.protobuf.Timestamp updatedOn = 15;
+}
+
+message Photo{
+    int64 id = 1;
+    string url = 2;
+}
+message CreatePostRequest{
+    int64 id = 1;
+    int64 customerId = 2;
+    string customerName = 3;
+    int64 userId = 4;
+    string chanel =5;
+    string description = 6;
+    string product = 7;
+    string phone = 8;
+    string pic = 9;
+    double price = 10;
+    string notes = 11;
+    repeated Photo photo = 12;
+    int32 status = 13;
+    string api = 14;
+}
+
+message CreatePostResponse{
+    string api = 1;
+    string message = 2;
+    int64 id = 3;
+    bool error =4;
+}
+
+service PostService{
+    rpc CreatePost(CreatePostRequest) returns (CreatePostResponse){
+        option (google.api.http) = {
+            post: "/v1/post/create"
+            body: "*"
+        };
+    }
+}
