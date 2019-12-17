@@ -78,7 +78,7 @@ func (s *postServiceServer) checkAPI(api string) error {
 	return nil
 }
 
-// Create new todo task
+// Create new Post
 func (s *postServiceServer) CreatePost(ctx context.Context, req *v1.CreatePostRequest) (*v1.CreatePostResponse, error) {
 	flag.Parse()
 	initAmqp()
@@ -115,10 +115,10 @@ func (s *postServiceServer) CreatePost(ctx context.Context, req *v1.CreatePostRe
 	failOnError(err, "Failed to marshal JSON")
 	//try to publish message into broker
 	err = ch.Publish(
-		"go-test-exchange", // exchange
-		"go-test-key",      // routing key
-		false,              // mandatory
-		false,              // immediate
+		"post-data-exchange", // exchange
+		"go-test-key",        // routing key
+		false,                // mandatory
+		false,                // immediate
 		amqp.Publishing{
 			DeliveryMode: amqp.Transient,
 			ContentType:  "application/json",
@@ -131,6 +131,64 @@ func (s *postServiceServer) CreatePost(ctx context.Context, req *v1.CreatePostRe
 	}
 
 	return &v1.CreatePostResponse{
+		Api:     apiVersion,
+		Message: message,
+		Error:   errorStatus,
+	}, nil
+}
+
+func (s *postServiceServer) UpdatePost(ctx context.Context, req *v1.UpdatePostRequest) (*v1.UpdatePostResponse, error) {
+	flag.Parse()
+	initAmqp()
+	var postParam models.PostModelParam
+	// check if the API version requested by client is supported by server
+	message := "Successfully update post !"
+	errorStatus := false
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+
+	photo := make([]models.Photo, len(req.Photo))
+	for i, value := range req.Photo {
+		photo[i].Id = value.Id
+		photo[i].Url = value.Url
+	}
+	postParam.DbId = req.DbId
+	postParam.CustomerId = req.CustomerId
+	postParam.CustomerName = req.CustomerName
+	postParam.UserId = req.UserId
+	postParam.Chanel = req.Chanel
+	postParam.Description = req.Description
+	postParam.Product = req.Product
+	postParam.Phone = req.Phone
+	postParam.Pic = req.Pic
+	postParam.Price = req.Price
+	postParam.Notes = req.Notes
+	postParam.Status = req.Status
+	postParam.CreatedOn = time.Now()
+	postParam.UpdatedOn = time.Now()
+	postParam.Photo = photo
+	payload, err := json.Marshal(postParam)
+	failOnError(err, "Failed to marshal JSON")
+	//try to publish message into broker
+	err = ch.Publish(
+		"update-post-exchange", // exchange
+		"go-test-key-update",   // routing key
+		false,                  // mandatory
+		false,                  // immediate
+		amqp.Publishing{
+			DeliveryMode: amqp.Transient,
+			ContentType:  "application/json",
+			Body:         payload,
+			Timestamp:    time.Now(),
+		})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return &v1.UpdatePostResponse{
 		Api:     apiVersion,
 		Message: message,
 		Error:   errorStatus,

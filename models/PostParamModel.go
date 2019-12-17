@@ -5,6 +5,7 @@ import (
 )
 
 type PostModelParam struct {
+	DbId         string    `json:"_id,omitempty"`
 	CustomerId   int64     `json:"customerId"`
 	CustomerName string    `json:"customerName"`
 	UserId       int64     `json:"userId"`

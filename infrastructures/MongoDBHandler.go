@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/djamboe/mtools-post-service/interfaces"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -27,6 +28,22 @@ func (handler *MongoDBHandler) InsertOne(data interface{}, collectionName string
 		fmt.Println(err)
 	}
 	return insertResult, nil
+}
+
+func (handler *MongoDBHandler) UpdateOne(id string, data interface{}, collectionName string, dbName string) (interface{}, error) {
+	docId := id
+	objId, err := primitive.ObjectIDFromHex(docId)
+
+	filter := bson.M{"_id": bson.M{"$eq": objId}}
+	update := bson.D{{Key: "$set", Value: data}}
+
+	collection := handler.Conn.Database(dbName).Collection(collectionName)
+	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	return updateResult, nil
 }
 
 type MongoRow struct {

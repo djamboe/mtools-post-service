@@ -49,10 +49,42 @@ message CreatePostResponse{
     bool error =4;
 }
 
+message UpdatePostRequest{
+    int64 id = 1;
+    int64 customerId = 2;
+    string customerName = 3;
+    int64 userId = 4;
+    string chanel =5;
+    string description = 6;
+    string product = 7;
+    string phone = 8;
+    string pic = 9;
+    double price = 10;
+    string notes = 11;
+    repeated Photo photo = 12;
+    int32 status = 13;
+    string api = 14;
+    string dbId = 15;
+}
+
+message UpdatePostResponse{
+    string api = 1;
+    string message = 2;
+    int64 id = 3;
+    bool error =4;
+}
+
 service PostService{
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse){
         option (google.api.http) = {
             post: "/v1/post/create"
+            body: "*"
+        };
+    }
+
+    rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse){
+        option (google.api.http) = {
+            post: "/v1/post/update"
             body: "*"
         };
     }

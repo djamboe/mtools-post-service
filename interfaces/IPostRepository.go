@@ -5,5 +5,6 @@ import (
 )
 
 type IPostRepository interface {
-	CreatePost(postParamModels models.PostModelParam) (interface{}, error)
+	CreatePost(postParamModels models.PostModel) (interface{}, error)
+	UpdatePost(id string, updateParamModels models.PostModel) (interface{}, error)
 }
