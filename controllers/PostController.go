@@ -24,3 +24,19 @@ func (controller *PostController) updatePost(id string, param models.PostModel) 
 	}
 	return createPost, nil
 }
+
+func (controller *PostController) createPostDetail(param models.PostDetailModel) (interface{}, error) {
+	createPost, err := controller.CreatePostDetailProcess(param)
+	if err != nil {
+		panic(err)
+	}
+	return createPost, nil
+}
+
+func (controller *PostController) updatePostDetail(id string, param models.PostDetailModel) (interface{}, error) {
+	createPost, err := controller.UpdatePostDetailProcess(id, param)
+	if err != nil {
+		panic(err)
+	}
+	return createPost, nil
+}

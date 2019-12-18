@@ -194,3 +194,108 @@ func (s *postServiceServer) UpdatePost(ctx context.Context, req *v1.UpdatePostRe
 		Error:   errorStatus,
 	}, nil
 }
+
+func (s *postServiceServer) CreatePostDetail(ctx context.Context, req *v1.CreatePostDetailRequest) (*v1.CreatePostDetailResponse, error) {
+	flag.Parse()
+	initAmqp()
+	var postParam models.PostDetailParamModel
+	// check if the API version requested by client is supported by server
+	message := "Successfully create new post !"
+	errorStatus := false
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+
+	photo := make([]models.Photo, len(req.Photo))
+	for i, value := range req.Photo {
+		photo[i].Id = value.Id
+		photo[i].Url = value.Url
+	}
+
+	postParam.PostId = req.PostId
+	postParam.Notes = req.Notes
+	postParam.Description = req.Description
+	postParam.Description = req.Description
+	postParam.Notes = req.Notes
+	postParam.Status = req.Status
+	postParam.CreatedOn = time.Now()
+	postParam.UpdatedOn = time.Now()
+	postParam.IsDeleted = false
+	postParam.Photo = photo
+	payload, err := json.Marshal(postParam)
+	failOnError(err, "Failed to marshal JSON")
+	//try to publish message into broker
+	err = ch.Publish(
+		"post-detail-data-exchange", // exchange
+		"go-test-key",               // routing key
+		false,                       // mandatory
+		false,                       // immediate
+		amqp.Publishing{
+			DeliveryMode: amqp.Transient,
+			ContentType:  "application/json",
+			Body:         payload,
+			Timestamp:    time.Now(),
+		})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return &v1.CreatePostDetailResponse{
+		Api:     apiVersion,
+		Message: message,
+		Error:   errorStatus,
+	}, nil
+}
+
+func (s *postServiceServer) UpdatePostDetail(ctx context.Context, req *v1.UpdatePostDetailRequest) (*v1.UpdatePostDetailResponse, error) {
+	flag.Parse()
+	initAmqp()
+	var postParam models.PostDetailParamModel
+	// check if the API version requested by client is supported by server
+	message := "Successfully update post !"
+	errorStatus := false
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+
+	photo := make([]models.Photo, len(req.Photo))
+	for i, value := range req.Photo {
+		photo[i].Id = value.Id
+		photo[i].Url = value.Url
+	}
+	postParam.DbId = req.DbId
+	postParam.Description = req.Description
+	postParam.Notes = req.Notes
+	postParam.Status = req.Status
+	postParam.CreatedOn = time.Now()
+	postParam.UpdatedOn = time.Now()
+	postParam.Photo = photo
+	postParam.IsDeleted = req.IsDeleted
+	payload, err := json.Marshal(postParam)
+	failOnError(err, "Failed to marshal JSON")
+	//try to publish message into broker
+	err = ch.Publish(
+		"update-post-detail-exchange", // exchange
+		"go-test-key-update-detail",   // routing key
+		false,                         // mandatory
+		false,                         // immediate
+		amqp.Publishing{
+			DeliveryMode: amqp.Transient,
+			ContentType:  "application/json",
+			Body:         payload,
+			Timestamp:    time.Now(),
+		})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return &v1.UpdatePostDetailResponse{
+		Api:     apiVersion,
+		Message: message,
+		Error:   errorStatus,
+	}, nil
+}

@@ -24,3 +24,19 @@ func (service *PostService) UpdatePostProcess(id string, postParam models.PostMo
 	}
 	return user, nil
 }
+
+func (service *PostService) CreatePostDetailProcess(postParam models.PostDetailModel) (interface{}, error) {
+	user, err := service.CreatePostDetail(postParam)
+	if err != nil {
+		panic(err)
+	}
+	return user, nil
+}
+
+func (service *PostService) UpdatePostDetailProcess(id string, postParam models.PostDetailModel) (interface{}, error) {
+	user, err := service.UpdatePostDetail(id, postParam)
+	if err != nil {
+		panic(err)
+	}
+	return user, nil
+}

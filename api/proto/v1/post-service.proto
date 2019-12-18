@@ -45,8 +45,7 @@ message CreatePostRequest{
 message CreatePostResponse{
     string api = 1;
     string message = 2;
-    int64 id = 3;
-    bool error =4;
+    bool error =3;
 }
 
 message UpdatePostRequest{
@@ -74,6 +73,39 @@ message UpdatePostResponse{
     bool error =4;
 }
 
+message CreatePostDetailRequest{
+    string postId = 1;
+    string description = 2;
+    string notes = 3;
+    repeated Photo photo = 4;
+    int32 status =5;
+    string api = 6;
+}
+
+message CreatePostDetailResponse{
+    string api = 1;
+    string message = 2;
+    bool error =3;
+}
+
+message UpdatePostDetailRequest{
+    string postId = 1;
+    string description = 2;
+    string notes = 3;
+    repeated Photo photo = 4;
+    int32 status =5;
+    string api = 6;
+    string dbId =7;
+    bool isDeleted = 8;
+}
+
+message UpdatePostDetailResponse{
+    string api = 1;
+    string message = 2;
+    bool error =3;
+}
+
+
 service PostService{
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse){
         option (google.api.http) = {
@@ -85,6 +117,20 @@ service PostService{
     rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse){
         option (google.api.http) = {
             post: "/v1/post/update"
+            body: "*"
+        };
+    }
+
+    rpc CreatePostDetail(CreatePostDetailRequest) returns (CreatePostDetailResponse){
+        option (google.api.http) = {
+            post: "/v1/post/create-post-detail"
+            body: "*"
+        };
+    }
+
+    rpc UpdatePostDetail(UpdatePostDetailRequest) returns (UpdatePostDetailResponse){
+        option (google.api.http) = {
+            post: "/v1/post/update-post-detail"
             body: "*"
         };
     }

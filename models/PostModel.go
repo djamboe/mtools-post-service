@@ -17,4 +17,5 @@ type PostModel struct {
 	CreatedOn    time.Time `json:"createdOn"`
 	UpdatedOn    time.Time `json:"updatedOn"`
 	Photo        []Photo   `json:"photo"`
+	IsDeleted    bool      `json:"isDeleted"`
 }

@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"fmt"
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/djamboe/mtools-post-service/interfaces"
 	"github.com/djamboe/mtools-post-service/models"
@@ -48,13 +47,48 @@ func (repository *PostRepositoryWithCircuitBreaker) UpdatePost(id string, param 
 	}
 }
 
+func (repository *PostRepositoryWithCircuitBreaker) CreatePostDetail(param models.PostDetailModel) (interface{}, error) {
+	output := make(chan interface{}, 1)
+	hystrix.ConfigureCommand("create_post_detail", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("create_post_detail", func() error {
+		postData, _ := repository.PostRepository.CreatePostDetail(param)
+		output <- postData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return 0, err
+	}
+}
+
+func (repository *PostRepositoryWithCircuitBreaker) UpdatePostDetail(id string, param models.PostDetailModel) (interface{}, error) {
+	output := make(chan interface{}, 1)
+	hystrix.ConfigureCommand("update_post", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("update_post", func() error {
+		postData, _ := repository.PostRepository.UpdatePostDetail(id, param)
+		output <- postData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return 0, err
+	}
+}
+
 type PostRepository struct {
 	//interfaces.IDbHandler
 	interfaces.IMongoDBHandler
 }
 
 func (repository *PostRepository) CreatePost(param models.PostModel) (interface{}, error) {
-	fmt.Println(param.UserId)
 	row, err := repository.InsertOne(param, "post", "maroon_martools")
 
 	if err != nil {
@@ -70,6 +104,34 @@ func (repository *PostRepository) CreatePost(param models.PostModel) (interface{
 
 func (repository *PostRepository) UpdatePost(id string, param models.PostModel) (interface{}, error) {
 	row, err := repository.UpdateOne(id, param, "post", "maroon_martools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return 0, nil
+	}
+
+	return row, nil
+}
+
+func (repository *PostRepository) CreatePostDetail(param models.PostDetailModel) (interface{}, error) {
+	row, err := repository.InsertOne(param, "post_detail", "maroon_martools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return 0, nil
+	}
+
+	return row, nil
+}
+
+func (repository *PostRepository) UpdatePostDetail(id string, param models.PostDetailModel) (interface{}, error) {
+	row, err := repository.UpdateOne(id, param, "post_detail", "maroon_martools")
 
 	if err != nil {
 		panic(err)
