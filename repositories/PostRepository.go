@@ -103,6 +103,24 @@ func (repository *PostRepositoryWithCircuitBreaker) GetPostDataById(param models
 	}
 }
 
+func (repository *PostRepositoryWithCircuitBreaker) GetPostDetailDataById(param models.GetPostDetailParamModel) (models.PostDetailModel, error) {
+	output := make(chan models.PostDetailModel, 1)
+	hystrix.ConfigureCommand("post_detail_data", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("post_detail_data", func() error {
+		postData, _ := repository.PostRepository.GetPostDetailDataById(param)
+		output <- postData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return models.PostDetailModel{}, err
+	}
+}
+
 type PostRepository struct {
 	//interfaces.IDbHandler
 	interfaces.IMongoDBHandler
@@ -180,6 +198,26 @@ func (repository *PostRepository) GetPostDataById(dataPostParamModels models.Pos
 	}
 
 	var postData models.PostModel
+	row.DecodeResults(&postData)
+	return postData, nil
+}
+
+func (repository *PostRepository) GetPostDetailDataById(dataPostParamModels models.GetPostDetailParamModel) (models.PostDetailModel, error) {
+	docId := dataPostParamModels.Id
+	objId, err := primitive.ObjectIDFromHex(docId)
+
+	filter := bson.M{"_id": bson.M{"$eq": objId}}
+	row, err := repository.FindOne(filter, "post_detail", "maroon_martools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return models.PostDetailModel{}, nil
+	}
+
+	var postData models.PostDetailModel
 	row.DecodeResults(&postData)
 	return postData, nil
 }

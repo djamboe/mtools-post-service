@@ -21,6 +21,18 @@ message Post{
     bool isDelete = 15;
 }
 
+message PostDetail{
+    string api = 1;
+    string postId = 2;
+    string description = 3;
+    string notes = 4;
+    repeated Photo photo = 5;
+    int32 status = 6;
+    bool isDelete = 7;
+    google.protobuf.Timestamp createdOn = 9;
+    google.protobuf.Timestamp updatedOn = 10;
+}
+
 message Photo{
     int64 id = 1;
     string url = 2;
@@ -117,6 +129,18 @@ message GetPostDataResponse{
     bool error = 4;
 }
 
+message GetPostDataDetailRequest{
+    string id = 1;
+    string api = 2;
+}
+
+message GetPostDataDetailResponse{
+    string api = 1;
+    string message = 2;
+    PostDetail postDetail =3;
+    bool error = 4;
+}
+
 service PostService{
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse){
         option (google.api.http) = {
@@ -149,6 +173,13 @@ service PostService{
     rpc GetPostData(GetPostDataRequest) returns (GetPostDataResponse){
         option (google.api.http) = {
             post: "/v1/post/data"
+            body: "*"
+        };
+    }
+
+    rpc GetPostDataDetail(GetPostDataDetailRequest) returns (GetPostDataDetailResponse){
+        option (google.api.http) = {
+            post: "/v1/post-detail/data"
             body: "*"
         };
     }

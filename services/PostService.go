@@ -56,3 +56,11 @@ func (service *PostService) GetPostDataProcess(postParam models.PostDataParamMod
 	}
 	return user, nil
 }
+
+func (service *PostService) GetPostDetailDataProcess(postParam models.GetPostDetailParamModel) (models.PostDetailModel, error) {
+	user, err := service.GetPostDetailDataById(postParam)
+	if err != nil {
+		panic(err)
+	}
+	return user, nil
+}

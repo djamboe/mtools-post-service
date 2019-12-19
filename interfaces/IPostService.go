@@ -8,4 +8,5 @@ type IPostService interface {
 	CreatePostDetailProcess(postParamModel models.PostDetailModel) (interface{}, error)
 	UpdatePostDetailProcess(id string, postParamModel models.PostDetailModel) (interface{}, error)
 	GetPostDataProcess(postParamModel models.PostDataParamModel) (models.PostModel, error)
+	GetPostDetailDataProcess(postParamModel models.GetPostDetailParamModel) (models.PostDetailModel, error)
 }

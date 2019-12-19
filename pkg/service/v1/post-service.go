@@ -338,3 +338,37 @@ func (s *postServiceServer) GetPostData(ctx context.Context, req *v1.GetPostData
 		Post:    postDataResponse,
 	}, nil
 }
+
+func (s *postServiceServer) GetPostDataDetail(ctx context.Context, req *v1.GetPostDataDetailRequest) (*v1.GetPostDataDetailResponse, error) {
+	// check if the API version requested by client is supported by server
+	message := "Successfully get post detail data !"
+	errorStatus := false
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+	postController := ServiceContainer().InjectPostController()
+	postData := models.GetPostDetailParamModel{}
+	postData.Id = req.Id
+	response, err := postController.GetPostDetailDataProcess(postData)
+
+	if err != nil {
+		message = "Failed get post data !"
+		errorStatus = true
+	}
+
+	postDataResponse := &v1.PostDetail{}
+	postDataResponse.PostId = response.PostId
+	postDataResponse.Notes = response.Notes
+	postDataResponse.Status = response.Status
+	postDataResponse.Description = response.Description
+	postDataResponse.IsDelete = response.IsDeleted
+	postDataResponse.PostId = response.PostId
+
+	return &v1.GetPostDataDetailResponse{
+		Api:        apiVersion,
+		Error:      errorStatus,
+		Message:    message,
+		PostDetail: postDataResponse,
+	}, nil
+}
