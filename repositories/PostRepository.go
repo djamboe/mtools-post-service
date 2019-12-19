@@ -5,6 +5,8 @@ import (
 	"github.com/djamboe/mtools-post-service/interfaces"
 	"github.com/djamboe/mtools-post-service/models"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type PostRepositoryWithCircuitBreaker struct {
@@ -83,6 +85,24 @@ func (repository *PostRepositoryWithCircuitBreaker) UpdatePostDetail(id string, 
 	}
 }
 
+func (repository *PostRepositoryWithCircuitBreaker) GetPostDataById(param models.PostDataParamModel) (models.PostModel, error) {
+	output := make(chan models.PostModel, 1)
+	hystrix.ConfigureCommand("post_data", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("post_data", func() error {
+		postData, _ := repository.PostRepository.GetPostDataById(param)
+		output <- postData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return models.PostModel{}, err
+	}
+}
+
 type PostRepository struct {
 	//interfaces.IDbHandler
 	interfaces.IMongoDBHandler
@@ -142,4 +162,24 @@ func (repository *PostRepository) UpdatePostDetail(id string, param models.PostD
 	}
 
 	return row, nil
+}
+
+func (repository *PostRepository) GetPostDataById(dataPostParamModels models.PostDataParamModel) (models.PostModel, error) {
+	docId := dataPostParamModels.Id
+	objId, err := primitive.ObjectIDFromHex(docId)
+
+	filter := bson.M{"_id": bson.M{"$eq": objId}}
+	row, err := repository.FindOne(filter, "post", "maroon_martools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return models.PostModel{}, nil
+	}
+
+	var postData models.PostModel
+	row.DecodeResults(&postData)
+	return postData, nil
 }

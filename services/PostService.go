@@ -40,3 +40,19 @@ func (service *PostService) UpdatePostDetailProcess(id string, postParam models.
 	}
 	return user, nil
 }
+
+func (service *PostService) GetPostDetailData(id string, postParam models.PostDetailModel) (interface{}, error) {
+	user, err := service.UpdatePostDetail(id, postParam)
+	if err != nil {
+		panic(err)
+	}
+	return user, nil
+}
+
+func (service *PostService) GetPostDataProcess(postParam models.PostDataParamModel) (models.PostModel, error) {
+	user, err := service.GetPostDataById(postParam)
+	if err != nil {
+		panic(err)
+	}
+	return user, nil
+}

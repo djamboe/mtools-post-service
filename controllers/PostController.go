@@ -40,3 +40,11 @@ func (controller *PostController) updatePostDetail(id string, param models.PostD
 	}
 	return createPost, nil
 }
+
+func (controller *PostController) postData(param models.PostDataParamModel) (models.PostModel, error) {
+	postData, err := controller.GetPostDataProcess(param)
+	if err != nil {
+		panic(err)
+	}
+	return postData, nil
+}

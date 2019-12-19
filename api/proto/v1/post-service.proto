@@ -4,21 +4,21 @@ import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
 message Post{
-    int64 id = 1;
-    int64 customerId = 2;
-    string customerName = 3;
-    int64 userId = 4;
-    string chanel =5;
-    string description = 6;
-    string product = 7;
-    string phone = 8;
-    string pic = 9;
-    double price = 10;
-    string notes = 11;
-    repeated Photo photo = 12;
-    int32 status = 13;
-    google.protobuf.Timestamp createdOn = 14;
-    google.protobuf.Timestamp updatedOn = 15;
+    int64 customerId = 1;
+    string customerName = 2;
+    int64 userId = 3;
+    string chanel =4;
+    string description = 5;
+    string product = 6;
+    string phone = 7;
+    string pic = 8;
+    double price = 9;
+    string notes = 10;
+    repeated Photo photo = 11;
+    int32 status = 12;
+    google.protobuf.Timestamp createdOn = 13;
+    google.protobuf.Timestamp updatedOn = 14;
+    bool isDelete = 15;
 }
 
 message Photo{
@@ -105,6 +105,17 @@ message UpdatePostDetailResponse{
     bool error =3;
 }
 
+message GetPostDataRequest{
+    string id = 1;
+    string api = 2;
+}
+
+message GetPostDataResponse{
+    string api = 1;
+    string message = 2;
+    Post post =3;
+    bool error = 4;
+}
 
 service PostService{
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse){
@@ -131,6 +142,13 @@ service PostService{
     rpc UpdatePostDetail(UpdatePostDetailRequest) returns (UpdatePostDetailResponse){
         option (google.api.http) = {
             post: "/v1/post/update-post-detail"
+            body: "*"
+        };
+    }
+
+    rpc GetPostData(GetPostDataRequest) returns (GetPostDataResponse){
+        option (google.api.http) = {
+            post: "/v1/post/data"
             body: "*"
         };
     }

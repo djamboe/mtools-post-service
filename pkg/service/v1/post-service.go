@@ -299,3 +299,42 @@ func (s *postServiceServer) UpdatePostDetail(ctx context.Context, req *v1.Update
 		Error:   errorStatus,
 	}, nil
 }
+
+func (s *postServiceServer) GetPostData(ctx context.Context, req *v1.GetPostDataRequest) (*v1.GetPostDataResponse, error) {
+	// check if the API version requested by client is supported by server
+	message := "Successfully get post data !"
+	errorStatus := false
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+	postController := ServiceContainer().InjectPostController()
+	postData := models.PostDataParamModel{}
+	postData.Id = req.Id
+	response, err := postController.GetPostDataProcess(postData)
+
+	if err != nil {
+		message = "Failed get post data !"
+		errorStatus = true
+	}
+
+	postDataResponse := &v1.Post{}
+	postDataResponse.UserId = response.UserId
+	postDataResponse.Notes = response.Notes
+	postDataResponse.Phone = response.Phone
+	postDataResponse.Price = response.Price
+	postDataResponse.Pic = response.Pic
+	postDataResponse.Product = response.Product
+	postDataResponse.Status = response.Status
+	postDataResponse.CustomerId = response.CustomerId
+	postDataResponse.CustomerName = response.CustomerName
+	postDataResponse.Description = response.Description
+	postDataResponse.Chanel = response.Chanel
+	postDataResponse.IsDelete = response.IsDeleted
+	return &v1.GetPostDataResponse{
+		Api:     apiVersion,
+		Error:   errorStatus,
+		Message: message,
+		Post:    postDataResponse,
+	}, nil
+}

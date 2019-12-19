@@ -9,4 +9,5 @@ type IPostRepository interface {
 	UpdatePost(id string, updateParamModels models.PostModel) (interface{}, error)
 	CreatePostDetail(postParamModels models.PostDetailModel) (interface{}, error)
 	UpdatePostDetail(id string, updateParamModels models.PostDetailModel) (interface{}, error)
+	GetPostDataById(dataPostParamModels models.PostDataParamModel) (models.PostModel, error)
 }
