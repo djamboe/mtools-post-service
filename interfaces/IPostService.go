@@ -10,4 +10,7 @@ type IPostService interface {
 	GetPostDataProcess(postParamModel models.PostDataParamModel) (models.PostModel, error)
 	GetPostDetailDataProcess(postParamModel models.GetPostDetailParamModel) (models.PostDetailModel, error)
 	GetListPostDataProcess(postParamModel models.GetListPostDataParam) ([]*models.PostModel, error)
+	GetListPostDataDetailProcess(postParamModel models.GetListPostDataDetailParam) ([]*models.PostDetailModel, error)
+	DeletePostDataProcess(id string, postParamModel models.DeletePostModel) (interface{}, error)
+	DeletePostDataDetailProcess(id string, postParamModel models.DeletePostModel) (interface{}, error)
 }

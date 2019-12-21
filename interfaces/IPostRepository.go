@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"github.com/djamboe/mtools-post-service/models"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type IPostRepository interface {
@@ -12,4 +13,8 @@ type IPostRepository interface {
 	GetPostDataById(dataPostParamModels models.PostDataParamModel) (models.PostModel, error)
 	GetPostDetailDataById(dataPostParamModels models.GetPostDetailParamModel) (models.PostDetailModel, error)
 	GetListPostDataDataByUserId(dataPostParamModels models.GetListPostDataParam) ([]*models.PostModel, error)
+	GetListPostDataDetailByPostId(dataPostParamModels models.GetListPostDataDetailParam) ([]*models.PostDetailModel, error)
+	DeletePostData(id string, updateParamModels models.DeletePostModel) (interface{}, error)
+	DeletePostDataDetail(id string, updateParamModels models.DeletePostModel) (interface{}, error)
+	DeleteChildRelationData(collectionName string, updateParamModels models.DeletePostModel, filterParam bson.M) (interface{}, error)
 }

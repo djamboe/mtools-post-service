@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/djamboe/mtools-post-service/interfaces"
 	"github.com/djamboe/mtools-post-service/models"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type PostService struct {
@@ -10,65 +11,91 @@ type PostService struct {
 }
 
 func (service *PostService) CreatePostProcess(postParam models.PostModel) (interface{}, error) {
-	user, err := service.CreatePost(postParam)
+	post, err := service.CreatePost(postParam)
 	if err != nil {
 		panic(err)
 	}
-	return user, nil
+	return post, nil
 }
 
 func (service *PostService) UpdatePostProcess(id string, postParam models.PostModel) (interface{}, error) {
-	user, err := service.UpdatePost(id, postParam)
+	post, err := service.UpdatePost(id, postParam)
 	if err != nil {
 		panic(err)
 	}
-	return user, nil
+	return post, nil
 }
 
 func (service *PostService) CreatePostDetailProcess(postParam models.PostDetailModel) (interface{}, error) {
-	user, err := service.CreatePostDetail(postParam)
+	post, err := service.CreatePostDetail(postParam)
 	if err != nil {
 		panic(err)
 	}
-	return user, nil
+	return post, nil
 }
 
 func (service *PostService) UpdatePostDetailProcess(id string, postParam models.PostDetailModel) (interface{}, error) {
-	user, err := service.UpdatePostDetail(id, postParam)
+	post, err := service.UpdatePostDetail(id, postParam)
 	if err != nil {
 		panic(err)
 	}
-	return user, nil
+	return post, nil
 }
 
 func (service *PostService) GetPostDetailData(id string, postParam models.PostDetailModel) (interface{}, error) {
-	user, err := service.UpdatePostDetail(id, postParam)
+	post, err := service.UpdatePostDetail(id, postParam)
 	if err != nil {
 		panic(err)
 	}
-	return user, nil
+	return post, nil
 }
 
 func (service *PostService) GetPostDataProcess(postParam models.PostDataParamModel) (models.PostModel, error) {
-	user, err := service.GetPostDataById(postParam)
+	post, err := service.GetPostDataById(postParam)
 	if err != nil {
 		panic(err)
 	}
-	return user, nil
+	return post, nil
 }
 
 func (service *PostService) GetPostDetailDataProcess(postParam models.GetPostDetailParamModel) (models.PostDetailModel, error) {
-	user, err := service.GetPostDetailDataById(postParam)
+	post, err := service.GetPostDetailDataById(postParam)
 	if err != nil {
 		panic(err)
 	}
-	return user, nil
+	return post, nil
 }
 
 func (service *PostService) GetListPostDataProcess(postParam models.GetListPostDataParam) ([]*models.PostModel, error) {
-	user, err := service.GetListPostDataDataByUserId(postParam)
+	post, err := service.GetListPostDataDataByUserId(postParam)
 	if err != nil {
 		panic(err)
 	}
-	return user, nil
+	return post, nil
+}
+
+func (service *PostService) GetListPostDataDetailProcess(postParam models.GetListPostDataDetailParam) ([]*models.PostDetailModel, error) {
+	post, err := service.GetListPostDataDetailByPostId(postParam)
+	if err != nil {
+		panic(err)
+	}
+	return post, nil
+}
+
+func (service *PostService) DeletePostDataProcess(id string, postParam models.DeletePostModel) (interface{}, error) {
+	post, err := service.DeletePostData(id, postParam)
+	service.DeleteChildRelationData("post_detail", postParam, bson.M{"postid": id})
+
+	if err != nil {
+		panic(err)
+	}
+	return post, nil
+}
+
+func (service *PostService) DeletePostDataDetailProcess(id string, postParam models.DeletePostModel) (interface{}, error) {
+	post, err := service.DeletePostDataDetail(id, postParam)
+	if err != nil {
+		panic(err)
+	}
+	return post, nil
 }

@@ -153,6 +153,40 @@ message GetListPostDataResponse{
     bool error = 4;
 }
 
+message GetListPostDataDetailRequest{
+    string postId = 1;
+    string api = 2;
+}
+
+message GetListPostDataDetailResponse{
+    string api = 1;
+    string message = 2;
+    repeated PostDetail postDetail =3;
+    bool error = 4;
+}
+
+message DeletePostRequest{
+    string id = 1;
+    string api = 2;
+}
+
+message DeletePostResponse{
+    string api = 1;
+    string message = 2;
+    bool error = 3;
+}
+
+message DeletePostDetailRequest{
+    string id = 1;
+    string api = 2;
+}
+
+message DeletePostDetailResponse{
+    string api = 1;
+    string message = 2;
+    bool error = 3;
+}
+
 service PostService{
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse){
         option (google.api.http) = {
@@ -199,6 +233,27 @@ service PostService{
     rpc GetListPostData(GetListPostDataRequest) returns (GetListPostDataResponse){
         option (google.api.http) = {
             post: "/v1/post/data/list"
+            body: "*"
+        };
+    }
+
+    rpc GetListPostDataDetail(GetListPostDataDetailRequest) returns (GetListPostDataDetailResponse){
+        option (google.api.http) = {
+            post: "/v1/post/data-detail/list"
+            body: "*"
+        };
+    }
+
+    rpc DeletePost(DeletePostRequest) returns (DeletePostResponse){
+        option (google.api.http) = {
+            post: "/v1/post/delete"
+            body: "*"
+        };
+    }
+
+    rpc DeletePostDetail(DeletePostDetailRequest) returns (DeletePostDetailResponse){
+        option (google.api.http) = {
+            post: "/v1/post-detail/delete"
             body: "*"
         };
     }

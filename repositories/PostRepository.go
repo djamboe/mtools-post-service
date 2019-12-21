@@ -141,6 +141,78 @@ func (repository *PostRepositoryWithCircuitBreaker) GetListPostDataDataByUserId(
 	}
 }
 
+func (repository *PostRepositoryWithCircuitBreaker) GetListPostDataDetailByPostId(param models.GetListPostDataDetailParam) ([]*models.PostDetailModel, error) {
+	output := make(chan []*models.PostDetailModel, 1)
+	hystrix.ConfigureCommand("list_post_data_detail", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("list_post_data_detail", func() error {
+		postData, _ := repository.PostRepository.GetListPostDataDetailByPostId(param)
+		output <- postData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return []*models.PostDetailModel{}, err
+	}
+}
+
+func (repository *PostRepositoryWithCircuitBreaker) DeletePostData(id string, param models.DeletePostModel) (interface{}, error) {
+	output := make(chan interface{}, 1)
+	hystrix.ConfigureCommand("delete_post", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("delete_post", func() error {
+		postData, _ := repository.PostRepository.DeletePostData(id, param)
+		output <- postData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return 0, err
+	}
+}
+
+func (repository *PostRepositoryWithCircuitBreaker) DeletePostDataDetail(id string, param models.DeletePostModel) (interface{}, error) {
+	output := make(chan interface{}, 1)
+	hystrix.ConfigureCommand("delete_post_detail", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("delete_post_detail", func() error {
+		postData, _ := repository.PostRepository.DeletePostDataDetail(id, param)
+		output <- postData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return 0, err
+	}
+}
+
+func (repository *PostRepositoryWithCircuitBreaker) DeleteChildRelationData(collectionName string, param models.DeletePostModel, filter bson.M) (interface{}, error) {
+	output := make(chan interface{}, 1)
+	hystrix.ConfigureCommand("update_child_relation", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("update_child_relation", func() error {
+		postData, _ := repository.PostRepository.DeleteChildRelationData(collectionName, param, filter)
+		output <- postData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return 0, err
+	}
+}
+
 type PostRepository struct {
 	//interfaces.IDbHandler
 	interfaces.IMongoDBHandler
@@ -265,4 +337,71 @@ func (repository *PostRepository) GetListPostDataDataByUserId(dataPostParamModel
 		listPostData = append(listPostData, &data)
 	}
 	return listPostData, nil
+}
+
+func (repository *PostRepository) GetListPostDataDetailByPostId(dataPostParamModels models.GetListPostDataDetailParam) ([]*models.PostDetailModel, error) {
+	docId := dataPostParamModels.PostId
+	filter := bson.M{"postid": docId}
+	row, err := repository.Find(filter, "post_detail", "maroon_martools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return []*models.PostDetailModel{}, nil
+	}
+
+	var listPostData []*models.PostDetailModel
+	for row.Next(context.TODO()) {
+		var data models.PostDetailModel
+		err = row.Decode(&data)
+		if err != nil {
+			log.Fatal("Error on Decoding the document", err)
+		}
+		listPostData = append(listPostData, &data)
+	}
+	return listPostData, nil
+}
+
+func (repository *PostRepository) DeletePostData(id string, param models.DeletePostModel) (interface{}, error) {
+	row, err := repository.UpdateOne(id, param, "post", "maroon_martools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return 0, nil
+	}
+
+	return row, nil
+}
+
+func (repository *PostRepository) DeletePostDataDetail(id string, param models.DeletePostModel) (interface{}, error) {
+	row, err := repository.UpdateOne(id, param, "post_detail", "maroon_martools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return 0, nil
+	}
+
+	return row, nil
+}
+
+func (repository *PostRepository) DeleteChildRelationData(collectionName string, param models.DeletePostModel, filter bson.M) (interface{}, error) {
+	row, err := repository.UpdateMany(param, collectionName, "maroon_martools", filter)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return 0, nil
+	}
+
+	return row, nil
 }

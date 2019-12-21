@@ -54,6 +54,17 @@ func (handler *MongoDBHandler) Find(filter bson.M, collectionName string, dbName
 	return rows, nil
 }
 
+func (handler *MongoDBHandler) UpdateMany(data interface{}, collectionName string, dbName string, filterParam bson.M) (interface{}, error) {
+	update := bson.D{{Key: "$set", Value: data}}
+	collection := handler.Conn.Database(dbName).Collection(collectionName)
+	updateResult, err := collection.UpdateMany(context.TODO(), filterParam, update)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	return updateResult, nil
+}
+
 type MongoCursor struct {
 	Rows *mongo.Cursor
 }

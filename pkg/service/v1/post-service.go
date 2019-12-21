@@ -433,3 +433,124 @@ func (s *postServiceServer) GetListPostData(ctx context.Context, req *v1.GetList
 		Post:    postDataSlice,
 	}, nil
 }
+
+func (s *postServiceServer) GetListPostDataDetail(ctx context.Context, req *v1.GetListPostDataDetailRequest) (*v1.GetListPostDataDetailResponse, error) {
+	// check if the API version requested by client is supported by server
+	message := "Successfully get list post data !"
+	errorStatus := false
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+	postController := ServiceContainer().InjectPostController()
+	listPostDataDetail := models.GetListPostDataDetailParam{}
+	listPostDataDetail.PostId = req.PostId
+	response, err := postController.GetListPostDataDetailProcess(listPostDataDetail)
+
+	if err != nil {
+		message = "Failed get list post data !"
+		errorStatus = true
+	}
+
+	postDataDetailSlice := make([]*v1.PostDetail, len(response))
+	//photo := new(v1.Photo)
+	for i, value := range response {
+		postDataDetailSlice[i] = new(v1.PostDetail)
+		postDataDetailSlice[i].PostId = value.PostId
+		postDataDetailSlice[i].Description = value.Description
+		postDataDetailSlice[i].Notes = value.Notes
+		postDataDetailSlice[i].Status = value.Status
+		photo := make([]*v1.Photo, len(value.Photo))
+		for i, valuePhoto := range value.Photo {
+			photo[i] = new(v1.Photo)
+			photo[i].Id = valuePhoto.Id
+			photo[i].Url = valuePhoto.Url
+		}
+		postDataDetailSlice[i].Photo = photo
+	}
+
+	return &v1.GetListPostDataDetailResponse{
+		Api:        apiVersion,
+		Error:      errorStatus,
+		Message:    message,
+		PostDetail: postDataDetailSlice,
+	}, nil
+}
+
+func (s *postServiceServer) DeletePost(ctx context.Context, req *v1.DeletePostRequest) (*v1.DeletePostResponse, error) {
+	flag.Parse()
+	initAmqp()
+	var postParam models.PostModelParam
+	// check if the API version requested by client is supported by server
+	message := "Successfully deleted post !"
+	errorStatus := false
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+
+	postParam.DbId = req.Id
+	payload, err := json.Marshal(postParam)
+	failOnError(err, "Failed to marshal JSON")
+	//try to publish message into broker
+	err = ch.Publish(
+		"delete-post-exchange", // exchange
+		"go-test-key-delete",   // routing key
+		false,                  // mandatory
+		false,                  // immediate
+		amqp.Publishing{
+			DeliveryMode: amqp.Transient,
+			ContentType:  "application/json",
+			Body:         payload,
+			Timestamp:    time.Now(),
+		})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return &v1.DeletePostResponse{
+		Api:     apiVersion,
+		Message: message,
+		Error:   errorStatus,
+	}, nil
+}
+
+func (s *postServiceServer) DeletePostDetail(ctx context.Context, req *v1.DeletePostDetailRequest) (*v1.DeletePostDetailResponse, error) {
+	flag.Parse()
+	initAmqp()
+	var postParam models.PostModelParam
+	// check if the API version requested by client is supported by server
+	message := "Successfully deleted post !"
+	errorStatus := false
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+
+	postParam.DbId = req.Id
+	payload, err := json.Marshal(postParam)
+	failOnError(err, "Failed to marshal JSON")
+	//try to publish message into broker
+	err = ch.Publish(
+		"delete-post-detail-exchange", // exchange
+		"go-test-key-delete-detail",   // routing key
+		false,                         // mandatory
+		false,                         // immediate
+		amqp.Publishing{
+			DeliveryMode: amqp.Transient,
+			ContentType:  "application/json",
+			Body:         payload,
+			Timestamp:    time.Now(),
+		})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return &v1.DeletePostDetailResponse{
+		Api:     apiVersion,
+		Message: message,
+		Error:   errorStatus,
+	}, nil
+}
