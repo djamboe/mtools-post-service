@@ -55,7 +55,6 @@ func initAmqp() {
 func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
-		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
 }
 
@@ -331,6 +330,12 @@ func (s *postServiceServer) GetPostData(ctx context.Context, req *v1.GetPostData
 	postDataResponse.Description = response.Description
 	postDataResponse.Chanel = response.Chanel
 	postDataResponse.IsDelete = response.IsDeleted
+	photo := new(v1.Photo)
+	for _, value := range response.Photo {
+		photo.Id = value.Id
+		photo.Url = value.Url
+		postDataResponse.Photo = append(postDataResponse.Photo, photo)
+	}
 	return &v1.GetPostDataResponse{
 		Api:     apiVersion,
 		Error:   errorStatus,
@@ -364,11 +369,67 @@ func (s *postServiceServer) GetPostDataDetail(ctx context.Context, req *v1.GetPo
 	postDataResponse.Description = response.Description
 	postDataResponse.IsDelete = response.IsDeleted
 	postDataResponse.PostId = response.PostId
+	photo := new(v1.Photo)
+	for _, value := range response.Photo {
+		photo.Id = value.Id
+		photo.Url = value.Url
+		postDataResponse.Photo = append(postDataResponse.Photo, photo)
+	}
 
 	return &v1.GetPostDataDetailResponse{
 		Api:        apiVersion,
 		Error:      errorStatus,
 		Message:    message,
 		PostDetail: postDataResponse,
+	}, nil
+}
+
+func (s *postServiceServer) GetListPostData(ctx context.Context, req *v1.GetListPostDataRequest) (*v1.GetListPostDataResponse, error) {
+	// check if the API version requested by client is supported by server
+	message := "Successfully get list post data !"
+	errorStatus := false
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+	postController := ServiceContainer().InjectPostController()
+	listPostData := models.GetListPostDataParam{}
+	listPostData.UserId = req.UserId
+	response, err := postController.GetListPostDataProcess(listPostData)
+
+	if err != nil {
+		message = "Failed get list post data !"
+		errorStatus = true
+	}
+
+	postDataSlice := make([]*v1.Post, len(response))
+	//photo := new(v1.Photo)
+	for i, value := range response {
+		postDataSlice[i] = new(v1.Post)
+		postDataSlice[i].UserId = value.UserId
+		postDataSlice[i].CustomerId = value.CustomerId
+		postDataSlice[i].UserId = value.UserId
+		postDataSlice[i].Chanel = value.Chanel
+		postDataSlice[i].Description = value.Description
+		postDataSlice[i].Product = value.Product
+		postDataSlice[i].Phone = value.Phone
+		postDataSlice[i].Pic = value.Pic
+		postDataSlice[i].Price = value.Price
+		postDataSlice[i].Notes = value.Notes
+		postDataSlice[i].Status = value.Status
+		photo := make([]*v1.Photo, len(value.Photo))
+		for i, valuePhoto := range value.Photo {
+			photo[i] = new(v1.Photo)
+			photo[i].Id = valuePhoto.Id
+			photo[i].Url = valuePhoto.Url
+		}
+		postDataSlice[i].Photo = photo
+	}
+
+	return &v1.GetListPostDataResponse{
+		Api:     apiVersion,
+		Error:   errorStatus,
+		Message: message,
+		Post:    postDataSlice,
 	}, nil
 }

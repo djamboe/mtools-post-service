@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 message Post{
     int64 customerId = 1;
     string customerName = 2;
-    int64 userId = 3;
+    string userId = 3;
     string chanel =4;
     string description = 5;
     string product = 6;
@@ -41,7 +41,7 @@ message CreatePostRequest{
     int64 id = 1;
     int64 customerId = 2;
     string customerName = 3;
-    int64 userId = 4;
+    string userId = 4;
     string chanel =5;
     string description = 6;
     string product = 7;
@@ -64,7 +64,7 @@ message UpdatePostRequest{
     int64 id = 1;
     int64 customerId = 2;
     string customerName = 3;
-    int64 userId = 4;
+    string userId = 4;
     string chanel =5;
     string description = 6;
     string product = 7;
@@ -141,6 +141,18 @@ message GetPostDataDetailResponse{
     bool error = 4;
 }
 
+message GetListPostDataRequest{
+    string userId = 1;
+    string api = 2;
+}
+
+message GetListPostDataResponse{
+    string api = 1;
+    string message = 2;
+    repeated Post post =3;
+    bool error = 4;
+}
+
 service PostService{
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse){
         option (google.api.http) = {
@@ -180,6 +192,13 @@ service PostService{
     rpc GetPostDataDetail(GetPostDataDetailRequest) returns (GetPostDataDetailResponse){
         option (google.api.http) = {
             post: "/v1/post-detail/data"
+            body: "*"
+        };
+    }
+
+    rpc GetListPostData(GetListPostDataRequest) returns (GetListPostDataResponse){
+        option (google.api.http) = {
+            post: "/v1/post/data/list"
             body: "*"
         };
     }

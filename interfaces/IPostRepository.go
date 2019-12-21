@@ -11,4 +11,5 @@ type IPostRepository interface {
 	UpdatePostDetail(id string, updateParamModels models.PostDetailModel) (interface{}, error)
 	GetPostDataById(dataPostParamModels models.PostDataParamModel) (models.PostModel, error)
 	GetPostDetailDataById(dataPostParamModels models.GetPostDetailParamModel) (models.PostDetailModel, error)
+	GetListPostDataDataByUserId(dataPostParamModels models.GetListPostDataParam) ([]*models.PostModel, error)
 }

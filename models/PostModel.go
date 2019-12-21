@@ -5,7 +5,7 @@ import "time"
 type PostModel struct {
 	CustomerId   int64     `json:"customerId"`
 	CustomerName string    `json:"customerName"`
-	UserId       int64     `json:"userId"`
+	UserId       string    `json:"userId"`
 	Chanel       string    `json:"chanel"`
 	Description  string    `json:"description"`
 	Product      string    `json:"product"`

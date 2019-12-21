@@ -64,3 +64,11 @@ func (service *PostService) GetPostDetailDataProcess(postParam models.GetPostDet
 	}
 	return user, nil
 }
+
+func (service *PostService) GetListPostDataProcess(postParam models.GetListPostDataParam) ([]*models.PostModel, error) {
+	user, err := service.GetListPostDataDataByUserId(postParam)
+	if err != nil {
+		panic(err)
+	}
+	return user, nil
+}

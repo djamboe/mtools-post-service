@@ -1,12 +1,14 @@
 package repositories
 
 import (
+	"context"
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/djamboe/mtools-post-service/interfaces"
 	"github.com/djamboe/mtools-post-service/models"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"log"
 )
 
 type PostRepositoryWithCircuitBreaker struct {
@@ -121,6 +123,24 @@ func (repository *PostRepositoryWithCircuitBreaker) GetPostDetailDataById(param 
 	}
 }
 
+func (repository *PostRepositoryWithCircuitBreaker) GetListPostDataDataByUserId(param models.GetListPostDataParam) ([]*models.PostModel, error) {
+	output := make(chan []*models.PostModel, 1)
+	hystrix.ConfigureCommand("list_post_data", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("list_post_data", func() error {
+		postData, _ := repository.PostRepository.GetListPostDataDataByUserId(param)
+		output <- postData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return []*models.PostModel{}, err
+	}
+}
+
 type PostRepository struct {
 	//interfaces.IDbHandler
 	interfaces.IMongoDBHandler
@@ -220,4 +240,29 @@ func (repository *PostRepository) GetPostDetailDataById(dataPostParamModels mode
 	var postData models.PostDetailModel
 	row.DecodeResults(&postData)
 	return postData, nil
+}
+
+func (repository *PostRepository) GetListPostDataDataByUserId(dataPostParamModels models.GetListPostDataParam) ([]*models.PostModel, error) {
+	docId := dataPostParamModels.UserId
+	filter := bson.M{"userid": docId}
+	row, err := repository.Find(filter, "post", "maroon_martools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return []*models.PostModel{}, nil
+	}
+
+	var listPostData []*models.PostModel
+	for row.Next(context.TODO()) {
+		var data models.PostModel
+		err = row.Decode(&data)
+		if err != nil {
+			log.Fatal("Error on Decoding the document", err)
+		}
+		listPostData = append(listPostData, &data)
+	}
+	return listPostData, nil
 }

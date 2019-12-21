@@ -46,14 +46,30 @@ func (handler *MongoDBHandler) UpdateOne(id string, data interface{}, collection
 	return updateResult, nil
 }
 
+func (handler *MongoDBHandler) Find(filter bson.M, collectionName string, dbName string) (*mongo.Cursor, error) {
+	collection := handler.Conn.Database(dbName).Collection(collectionName)
+	rows, _ := collection.Find(context.TODO(), filter)
+	row := new(MongoCursor)
+	row.Rows = rows
+	return rows, nil
+}
+
+type MongoCursor struct {
+	Rows *mongo.Cursor
+}
+
+func (r MongoCursor) DecodeResults(v interface{}) error {
+	return r.Rows.Decode(v)
+}
+
+func (r MongoCursor) Next() *mongo.Cursor {
+	return r.Next()
+}
+
 type MongoRow struct {
 	Rows *mongo.SingleResult
 }
 
 func (r *MongoRow) DecodeResults(v interface{}) error {
 	return r.Rows.Decode(v)
-}
-
-func (r MongoRow) Next() bool {
-	return r.Next()
 }
