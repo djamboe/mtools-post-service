@@ -22,6 +22,7 @@ type Config struct {
 	// HTTP/REST gateway start parameters section
 	// HTTPPort is TCP port to listen by HTTP/REST gateway
 	HTTPPort string
+	AMQPUri  string
 }
 
 // RunServer runs gRPC server and HTTP gateway

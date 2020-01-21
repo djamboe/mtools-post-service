@@ -1,1 +1,1 @@
-server.exe -grpc-port=9090 -http-port=8080
+server.exe -grpc-port=9092 -http-port=8082

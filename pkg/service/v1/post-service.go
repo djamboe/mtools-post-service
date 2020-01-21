@@ -3,7 +3,6 @@ package v1
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/djamboe/mtools-post-service/models"
 	v1 "github.com/djamboe/mtools-post-service/pkg/api/v1"
@@ -20,12 +19,12 @@ const (
 	apiVersion = "v1"
 )
 
-var (
-	amqpURI = flag.String("amqp", "amqp://guest:guest@localhost:5672/", "AMQP URI")
-)
-
 // toDoServiceServer is implementation of v1.ToDoServiceServer proto interface
 type postServiceServer struct {
+}
+
+func init() {
+	initAmqp()
 }
 
 var conn *amqp.Connection
@@ -34,22 +33,12 @@ var ch *amqp.Channel
 func initAmqp() {
 	var err error
 
-	conn, err = amqp.Dial(*amqpURI)
+	conn, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 
 	ch, err = conn.Channel()
 	failOnError(err, "Failed to open a channel")
 
-	err = ch.ExchangeDeclare(
-		"post-data-exchange", // name
-		"direct",             // type
-		true,                 // durable
-		false,                // auto-deleted
-		false,                // internal
-		false,                // noWait
-		nil,                  // arguments
-	)
-	failOnError(err, "Failed to declare the Exchange")
 }
 
 func failOnError(err error, msg string) {
@@ -79,9 +68,8 @@ func (s *postServiceServer) checkAPI(api string) error {
 
 // Create new Post
 func (s *postServiceServer) CreatePost(ctx context.Context, req *v1.CreatePostRequest) (*v1.CreatePostResponse, error) {
-	flag.Parse()
-	initAmqp()
 	var postParam models.PostModelParam
+	var loc, _ = time.LoadLocation("Asia/Jakarta")
 	// check if the API version requested by client is supported by server
 	message := "Successfully create new post !"
 	errorStatus := false
@@ -90,26 +78,20 @@ func (s *postServiceServer) CreatePost(ctx context.Context, req *v1.CreatePostRe
 		errorStatus = true
 	}
 
-	photo := make([]models.Photo, len(req.Photo))
-	for i, value := range req.Photo {
-		photo[i].Id = value.Id
-		photo[i].Url = value.Url
-	}
-
-	postParam.CustomerId = req.CustomerId
-	postParam.CustomerName = req.CustomerName
-	postParam.UserId = req.UserId
-	postParam.Chanel = req.Chanel
+	postParam.CustomerId = req.Customerid
+	postParam.CustomerName = req.Customername
+	postParam.UserId = req.Userid
+	postParam.Chanel = req.Channel
 	postParam.Description = req.Description
 	postParam.Product = req.Product
+	postParam.ProductId = req.Productid
 	postParam.Phone = req.Phone
 	postParam.Pic = req.Pic
 	postParam.Price = req.Price
 	postParam.Notes = req.Notes
 	postParam.Status = req.Status
-	postParam.CreatedOn = time.Now()
-	postParam.UpdatedOn = time.Now()
-	postParam.Photo = photo
+	postParam.CreatedOn = time.Now().In(loc)
+	postParam.UpdatedOn = time.Now().In(loc)
 	payload, err := json.Marshal(postParam)
 	failOnError(err, "Failed to marshal JSON")
 	//try to publish message into broker
@@ -137,8 +119,6 @@ func (s *postServiceServer) CreatePost(ctx context.Context, req *v1.CreatePostRe
 }
 
 func (s *postServiceServer) UpdatePost(ctx context.Context, req *v1.UpdatePostRequest) (*v1.UpdatePostResponse, error) {
-	flag.Parse()
-	initAmqp()
 	var postParam models.PostModelParam
 	// check if the API version requested by client is supported by server
 	message := "Successfully update post !"
@@ -148,15 +128,10 @@ func (s *postServiceServer) UpdatePost(ctx context.Context, req *v1.UpdatePostRe
 		errorStatus = true
 	}
 
-	photo := make([]models.Photo, len(req.Photo))
-	for i, value := range req.Photo {
-		photo[i].Id = value.Id
-		photo[i].Url = value.Url
-	}
 	postParam.DbId = req.DbId
-	postParam.CustomerId = req.CustomerId
-	postParam.CustomerName = req.CustomerName
-	postParam.UserId = req.UserId
+	postParam.CustomerId = req.Customerid
+	postParam.CustomerName = req.Customername
+	postParam.UserId = req.Userid
 	postParam.Chanel = req.Chanel
 	postParam.Description = req.Description
 	postParam.Product = req.Product
@@ -167,7 +142,6 @@ func (s *postServiceServer) UpdatePost(ctx context.Context, req *v1.UpdatePostRe
 	postParam.Status = req.Status
 	postParam.CreatedOn = time.Now()
 	postParam.UpdatedOn = time.Now()
-	postParam.Photo = photo
 	payload, err := json.Marshal(postParam)
 	failOnError(err, "Failed to marshal JSON")
 	//try to publish message into broker
@@ -195,8 +169,6 @@ func (s *postServiceServer) UpdatePost(ctx context.Context, req *v1.UpdatePostRe
 }
 
 func (s *postServiceServer) CreatePostDetail(ctx context.Context, req *v1.CreatePostDetailRequest) (*v1.CreatePostDetailResponse, error) {
-	flag.Parse()
-	initAmqp()
 	var postParam models.PostDetailParamModel
 	// check if the API version requested by client is supported by server
 	message := "Successfully create new post !"
@@ -249,8 +221,6 @@ func (s *postServiceServer) CreatePostDetail(ctx context.Context, req *v1.Create
 }
 
 func (s *postServiceServer) UpdatePostDetail(ctx context.Context, req *v1.UpdatePostDetailRequest) (*v1.UpdatePostDetailResponse, error) {
-	flag.Parse()
-	initAmqp()
 	var postParam models.PostDetailParamModel
 	// check if the API version requested by client is supported by server
 	message := "Successfully update post !"
@@ -318,24 +288,19 @@ func (s *postServiceServer) GetPostData(ctx context.Context, req *v1.GetPostData
 	}
 
 	postDataResponse := &v1.Post{}
-	postDataResponse.UserId = response.UserId
+	postDataResponse.Userid = response.UserId
 	postDataResponse.Notes = response.Notes
 	postDataResponse.Phone = response.Phone
 	postDataResponse.Price = response.Price
 	postDataResponse.Pic = response.Pic
 	postDataResponse.Product = response.Product
 	postDataResponse.Status = response.Status
-	postDataResponse.CustomerId = response.CustomerId
-	postDataResponse.CustomerName = response.CustomerName
+	postDataResponse.Customerid = response.CustomerId
+	postDataResponse.Customername = response.CustomerName
 	postDataResponse.Description = response.Description
-	postDataResponse.Chanel = response.Chanel
+	postDataResponse.Channel = response.Chanel
 	postDataResponse.IsDelete = response.IsDeleted
-	photo := new(v1.Photo)
-	for _, value := range response.Photo {
-		photo.Id = value.Id
-		photo.Url = value.Url
-		postDataResponse.Photo = append(postDataResponse.Photo, photo)
-	}
+
 	return &v1.GetPostDataResponse{
 		Api:     apiVersion,
 		Error:   errorStatus,
@@ -406,24 +371,21 @@ func (s *postServiceServer) GetListPostData(ctx context.Context, req *v1.GetList
 	//photo := new(v1.Photo)
 	for i, value := range response {
 		postDataSlice[i] = new(v1.Post)
-		postDataSlice[i].UserId = value.UserId
-		postDataSlice[i].CustomerId = value.CustomerId
-		postDataSlice[i].UserId = value.UserId
-		postDataSlice[i].Chanel = value.Chanel
+		postDataSlice[i].Userid = value.UserId
+		postDataSlice[i].Customerid = value.CustomerId
+		postDataSlice[i].Customername = value.CustomerName
+		postDataSlice[i].Userid = value.UserId
+		postDataSlice[i].Productid = value.ProductId
+		postDataSlice[i].Productname = value.ProductName
+		postDataSlice[i].Channel = value.Chanel
 		postDataSlice[i].Description = value.Description
 		postDataSlice[i].Product = value.Product
 		postDataSlice[i].Phone = value.Phone
+		postDataSlice[i].CreatedOn = value.CreatedOn.Format("2006-01-02 15:04:05")
 		postDataSlice[i].Pic = value.Pic
 		postDataSlice[i].Price = value.Price
 		postDataSlice[i].Notes = value.Notes
 		postDataSlice[i].Status = value.Status
-		photo := make([]*v1.Photo, len(value.Photo))
-		for i, valuePhoto := range value.Photo {
-			photo[i] = new(v1.Photo)
-			photo[i].Id = valuePhoto.Id
-			photo[i].Url = valuePhoto.Url
-		}
-		postDataSlice[i].Photo = photo
 	}
 
 	return &v1.GetListPostDataResponse{
@@ -478,8 +440,6 @@ func (s *postServiceServer) GetListPostDataDetail(ctx context.Context, req *v1.G
 }
 
 func (s *postServiceServer) DeletePost(ctx context.Context, req *v1.DeletePostRequest) (*v1.DeletePostResponse, error) {
-	flag.Parse()
-	initAmqp()
 	var postParam models.PostModelParam
 	// check if the API version requested by client is supported by server
 	message := "Successfully deleted post !"
@@ -517,8 +477,6 @@ func (s *postServiceServer) DeletePost(ctx context.Context, req *v1.DeletePostRe
 }
 
 func (s *postServiceServer) DeletePostDetail(ctx context.Context, req *v1.DeletePostDetailRequest) (*v1.DeletePostDetailResponse, error) {
-	flag.Parse()
-	initAmqp()
 	var postParam models.PostModelParam
 	// check if the API version requested by client is supported by server
 	message := "Successfully deleted post !"

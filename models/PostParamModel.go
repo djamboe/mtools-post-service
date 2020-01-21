@@ -6,9 +6,10 @@ import (
 
 type PostModelParam struct {
 	DbId         string    `json:"_id,omitempty"`
-	CustomerId   int64     `json:"customerId"`
+	CustomerId   string    `json:"customerId"`
 	CustomerName string    `json:"customerName"`
 	UserId       string    `json:"userId"`
+	ProductId    string    `json:"productId"`
 	Chanel       string    `json:"chanel"`
 	Description  string    `json:"description"`
 	Product      string    `json:"product"`
@@ -16,8 +17,7 @@ type PostModelParam struct {
 	Pic          string    `json:"pic"`
 	Price        float64   `json:"price"`
 	Notes        string    `json:"notes"`
-	Status       int32     `json:"status"`
-	Photo        []Photo   `json:"photo"`
+	Status       string    `json:"status"`
 	CreatedOn    time.Time `json:"createdOn"`
 	UpdatedOn    time.Time `json:"updatedOn"`
 }

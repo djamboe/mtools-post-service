@@ -4,21 +4,22 @@ import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
 message Post{
-    int64 customerId = 1;
-    string customerName = 2;
-    string userId = 3;
-    string chanel =4;
+    string customerid = 1;
+    string customername = 2;
+    string userid = 3;
+    string channel =4;
     string description = 5;
     string product = 6;
     string phone = 7;
     string pic = 8;
     double price = 9;
     string notes = 10;
-    repeated Photo photo = 11;
-    int32 status = 12;
-    google.protobuf.Timestamp createdOn = 13;
-    google.protobuf.Timestamp updatedOn = 14;
-    bool isDelete = 15;
+    string status = 11;
+    string createdOn = 12;
+    string updatedOn = 13;
+    bool isDelete = 14;
+    string productid = 15;
+    string productname = 16;
 }
 
 message PostDetail{
@@ -39,19 +40,19 @@ message Photo{
 }
 message CreatePostRequest{
     int64 id = 1;
-    int64 customerId = 2;
-    string customerName = 3;
-    string userId = 4;
-    string chanel =5;
+    string customerid = 2;
+    string customername = 3;
+    string userid = 4;
+    string channel =5;
     string description = 6;
     string product = 7;
     string phone = 8;
     string pic = 9;
     double price = 10;
     string notes = 11;
-    repeated Photo photo = 12;
-    int32 status = 13;
+    string status = 13;
     string api = 14;
+    string productid = 15;
 }
 
 message CreatePostResponse{
@@ -62,9 +63,9 @@ message CreatePostResponse{
 
 message UpdatePostRequest{
     int64 id = 1;
-    int64 customerId = 2;
-    string customerName = 3;
-    string userId = 4;
+    string customerid = 2;
+    string customername = 3;
+    string userid = 4;
     string chanel =5;
     string description = 6;
     string product = 7;
@@ -72,10 +73,10 @@ message UpdatePostRequest{
     string pic = 9;
     double price = 10;
     string notes = 11;
-    repeated Photo photo = 12;
-    int32 status = 13;
-    string api = 14;
-    string dbId = 15;
+    string status = 12;
+    string api = 13;
+    string dbId = 14;
+    string productid = 15;
 }
 
 message UpdatePostResponse{
