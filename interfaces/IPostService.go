@@ -13,4 +13,5 @@ type IPostService interface {
 	GetListPostDataDetailProcess(postParamModel models.GetListPostDataDetailParam) ([]*models.PostDetailModel, error)
 	DeletePostDataProcess(id string, postParamModel models.DeletePostModel) (interface{}, error)
 	DeletePostDataDetailProcess(id string, postParamModel models.DeletePostModel) (interface{}, error)
+	GetListWeeklyPlanDataProcess(dataWeeklyPlanParamModel models.GetWeeklyPlanParamModel) ([]*models.WeeklyPlan, error)
 }

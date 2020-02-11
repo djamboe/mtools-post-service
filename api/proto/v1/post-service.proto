@@ -1,7 +1,9 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
-import "google/api/annotations.proto";
+//import "google/protobuf/any.proto";
+import "third_party/google/api/annotations.proto";
+import "google/protobuf/struct.proto";
 
 message Post{
     string customerid = 1;
@@ -19,7 +21,7 @@ message Post{
     string updatedOn = 13;
     bool isDelete = 14;
     string productid = 15;
-    string productname = 16;
+    string dbId = 16;
 }
 
 message PostDetail{
@@ -188,6 +190,28 @@ message DeletePostDetailResponse{
     bool error = 3;
 }
 
+message GetWeeklyPlanRequest{
+    string api = 1;
+    string month = 2;
+}
+
+message PlanDetail{
+    string _id = 1;
+    string title = 3;
+}
+
+message Plan{
+    string date = 1;
+    google.protobuf.ListValue planTitle = 3;
+}
+
+message GetWeeklyPlanResponse{
+    string api = 1;
+    string message = 2;
+    bool error = 3;
+    repeated Plan plan  = 4;
+}
+
 service PostService{
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse){
         option (google.api.http) = {
@@ -255,6 +279,13 @@ service PostService{
     rpc DeletePostDetail(DeletePostDetailRequest) returns (DeletePostDetailResponse){
         option (google.api.http) = {
             post: "/v1/post-detail/delete"
+            body: "*"
+        };
+    }
+
+    rpc GetWeeklyPlanData(GetWeeklyPlanRequest) returns (GetWeeklyPlanResponse){
+        option (google.api.http) = {
+            post: "/v1/post/weekly-plan/list"
             body: "*"
         };
     }

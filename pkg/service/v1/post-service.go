@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/djamboe/mtools-post-service/models"
 	v1 "github.com/djamboe/mtools-post-service/pkg/api/v1"
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/streadway/amqp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -131,6 +132,7 @@ func (s *postServiceServer) UpdatePost(ctx context.Context, req *v1.UpdatePostRe
 	postParam.DbId = req.DbId
 	postParam.CustomerId = req.Customerid
 	postParam.CustomerName = req.Customername
+	postParam.ProductId = req.Productid
 	postParam.UserId = req.Userid
 	postParam.Chanel = req.Chanel
 	postParam.Description = req.Description
@@ -293,6 +295,7 @@ func (s *postServiceServer) GetPostData(ctx context.Context, req *v1.GetPostData
 	postDataResponse.Phone = response.Phone
 	postDataResponse.Price = response.Price
 	postDataResponse.Pic = response.Pic
+	postDataResponse.Productid = response.ProductId
 	postDataResponse.Product = response.Product
 	postDataResponse.Status = response.Status
 	postDataResponse.Customerid = response.CustomerId
@@ -371,12 +374,12 @@ func (s *postServiceServer) GetListPostData(ctx context.Context, req *v1.GetList
 	//photo := new(v1.Photo)
 	for i, value := range response {
 		postDataSlice[i] = new(v1.Post)
+		postDataSlice[i].DbId = value.DbId.Hex()
 		postDataSlice[i].Userid = value.UserId
 		postDataSlice[i].Customerid = value.CustomerId
 		postDataSlice[i].Customername = value.CustomerName
 		postDataSlice[i].Userid = value.UserId
 		postDataSlice[i].Productid = value.ProductId
-		postDataSlice[i].Productname = value.ProductName
 		postDataSlice[i].Channel = value.Chanel
 		postDataSlice[i].Description = value.Description
 		postDataSlice[i].Product = value.Product
@@ -510,5 +513,57 @@ func (s *postServiceServer) DeletePostDetail(ctx context.Context, req *v1.Delete
 		Api:     apiVersion,
 		Message: message,
 		Error:   errorStatus,
+	}, nil
+}
+
+func (s *postServiceServer) GetWeeklyPlanData(ctx context.Context, req *v1.GetWeeklyPlanRequest) (*v1.GetWeeklyPlanResponse, error) {
+	// check if the API version requested by client is supported by server
+	message := "Successfully get list weekly plan data !"
+	errorStatus := false
+
+	if err := s.checkAPI(req.Api); err != nil {
+		message = "Unsupported api version !"
+		errorStatus = true
+	}
+	postController := ServiceContainer().InjectPostController()
+	listWeeklyPlanData := models.GetWeeklyPlanParamModel{}
+	listWeeklyPlanData.Month = req.Month
+	response, err := postController.GetListWeeklyPlanDataProcess(listWeeklyPlanData)
+
+	if err != nil {
+		message = "Failed get list weekly plan data !"
+		errorStatus = true
+	}
+
+	x := make(map[string][]string)
+	for _, value := range response {
+		loc, _ := time.LoadLocation("Asia/Jakarta")
+		weeklyPlanDate := value.Date.Time().UTC().In(loc)
+		formattedDate := fmt.Sprintf("%d-%02d-%02d",
+			weeklyPlanDate.Year(), weeklyPlanDate.Month(), weeklyPlanDate.Day())
+		x[formattedDate] = append(x[formattedDate], value.Title)
+	}
+
+	weeklyPlanDataSlice := make([]*v1.Plan, len(x))
+	if len(x) > 0 {
+		iterator := 0
+		for key, value := range x {
+			weeklyPlanDataSlice[iterator] = new(v1.Plan)
+			weeklyPlanDataSlice[iterator].Date = key
+
+			planTitle := new(structpb.ListValue)
+			for _, valueTitle := range value {
+				planTitle.Values = append(planTitle.Values, &structpb.Value{Kind: &structpb.Value_StringValue{StringValue: valueTitle}})
+			}
+			weeklyPlanDataSlice[iterator].PlanTitle = planTitle
+			iterator++
+		}
+	}
+
+	return &v1.GetWeeklyPlanResponse{
+		Api:     apiVersion,
+		Error:   errorStatus,
+		Message: message,
+		Plan:    weeklyPlanDataSlice,
 	}, nil
 }

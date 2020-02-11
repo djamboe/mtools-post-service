@@ -48,3 +48,11 @@ func (controller *PostController) postData(param models.PostDataParamModel) (mod
 	}
 	return postData, nil
 }
+
+func (controller *PostController) getWeeklyPlanData(param models.GetWeeklyPlanParamModel) ([]*models.WeeklyPlan, error) {
+	postData, err := controller.GetListWeeklyPlanDataProcess(param)
+	if err != nil {
+		panic(err)
+	}
+	return postData, nil
+}

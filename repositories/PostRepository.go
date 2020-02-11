@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
+	"time"
 )
 
 type PostRepositoryWithCircuitBreaker struct {
@@ -120,6 +121,24 @@ func (repository *PostRepositoryWithCircuitBreaker) GetPostDetailDataById(param 
 	case err := <-errors:
 		println(err)
 		return models.PostDetailModel{}, err
+	}
+}
+
+func (repository *PostRepositoryWithCircuitBreaker) GetListWeeklyPlanData(param models.GetWeeklyPlanParamModel) ([]*models.WeeklyPlan, error) {
+	output := make(chan []*models.WeeklyPlan, 1)
+	hystrix.ConfigureCommand("list_weekly_plan", hystrix.CommandConfig{Timeout: 1000})
+	errors := hystrix.Go("list_weekly_plan", func() error {
+		weeklyPlanData, _ := repository.PostRepository.GetListWeeklyPlanData(param)
+		output <- weeklyPlanData
+		return nil
+	}, nil)
+
+	select {
+	case out := <-output:
+		return out, nil
+	case err := <-errors:
+		println(err)
+		return []*models.WeeklyPlan{}, err
 	}
 }
 
@@ -404,4 +423,64 @@ func (repository *PostRepository) DeleteChildRelationData(collectionName string,
 	}
 
 	return row, nil
+}
+
+func (repository *PostRepository) GetListWeeklyPlanData(dataWeeklyPlanParamModel models.GetWeeklyPlanParamModel) ([]*models.WeeklyPlan, error) {
+	currentTime := time.Now()
+
+	currentMonth := time.January
+
+	if dataWeeklyPlanParamModel.Month == "01" {
+		currentMonth = time.January
+	} else if dataWeeklyPlanParamModel.Month == "02" {
+		currentMonth = time.February
+	} else if dataWeeklyPlanParamModel.Month == "03" {
+		currentMonth = time.March
+	} else if dataWeeklyPlanParamModel.Month == "04" {
+		currentMonth = time.April
+	} else if dataWeeklyPlanParamModel.Month == "05" {
+		currentMonth = time.May
+	} else if dataWeeklyPlanParamModel.Month == "06" {
+		currentMonth = time.June
+	} else if dataWeeklyPlanParamModel.Month == "07" {
+		currentMonth = time.July
+	} else if dataWeeklyPlanParamModel.Month == "08" {
+		currentMonth = time.August
+	} else if dataWeeklyPlanParamModel.Month == "09" {
+		currentMonth = time.September
+	} else if dataWeeklyPlanParamModel.Month == "10" {
+		currentMonth = time.October
+	} else if dataWeeklyPlanParamModel.Month == "11" {
+		currentMonth = time.November
+	} else if dataWeeklyPlanParamModel.Month == "12" {
+		currentMonth = time.December
+	}
+	//month := dataWeeklyPlanParamModel.Month
+	fromDate := time.Date(currentTime.Year(), currentMonth, 1, 0, 0, 0, 0, time.UTC)
+	toDate := time.Date(currentTime.Year(), currentMonth, 31, 0, 0, 0, 0, time.UTC)
+	filter := bson.M{"date": bson.M{
+		"$gt":  fromDate,
+		"$lte": toDate,
+	}}
+	//filter := bson.M{"userid": docId}
+	row, err := repository.Find(filter, "weekly_plan", "maroon_martools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	if row == nil {
+		return []*models.WeeklyPlan{}, nil
+	}
+
+	var listWeeklyPlanData []*models.WeeklyPlan
+	for row.Next(context.TODO()) {
+		var data models.WeeklyPlan
+		err = row.Decode(&data)
+		if err != nil {
+			log.Fatal("Error on Decoding the document", err)
+		}
+		listWeeklyPlanData = append(listWeeklyPlanData, &data)
+	}
+	return listWeeklyPlanData, nil
 }

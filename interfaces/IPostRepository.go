@@ -17,4 +17,5 @@ type IPostRepository interface {
 	DeletePostData(id string, updateParamModels models.DeletePostModel) (interface{}, error)
 	DeletePostDataDetail(id string, updateParamModels models.DeletePostModel) (interface{}, error)
 	DeleteChildRelationData(collectionName string, updateParamModels models.DeletePostModel, filterParam bson.M) (interface{}, error)
+	GetListWeeklyPlanData(dataWeeklyPlanParamModel models.GetWeeklyPlanParamModel) ([]*models.WeeklyPlan, error)
 }

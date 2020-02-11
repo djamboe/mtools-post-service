@@ -99,3 +99,11 @@ func (service *PostService) DeletePostDataDetailProcess(id string, postParam mod
 	}
 	return post, nil
 }
+
+func (service *PostService) GetListWeeklyPlanDataProcess(postParam models.GetWeeklyPlanParamModel) ([]*models.WeeklyPlan, error) {
+	weeklyPlanData, err := service.GetListWeeklyPlanData(postParam)
+	if err != nil {
+		panic(err)
+	}
+	return weeklyPlanData, nil
+}
