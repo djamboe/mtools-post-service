@@ -541,7 +541,8 @@ func (s *postServiceServer) GetWeeklyPlanData(ctx context.Context, req *v1.GetWe
 		weeklyPlanDate := value.Date.Time().UTC().In(loc)
 		formattedDate := fmt.Sprintf("%d-%02d-%02d",
 			weeklyPlanDate.Year(), weeklyPlanDate.Month(), weeklyPlanDate.Day())
-		x[formattedDate] = append(x[formattedDate], value.Title)
+
+		x[formattedDate] = append(x[formattedDate], value.Title+"|"+value.DbId.Hex())
 	}
 
 	weeklyPlanDataSlice := make([]*v1.Plan, len(x))
